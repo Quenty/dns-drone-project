@@ -12,8 +12,8 @@ local Signal = require("Signal")
 local Math = require("Math")
 local Draw = require("Draw")
 
-local MAX_ACCELERATION = 10000
-local DEACCELERATION_DISTANCE = 50
+local MAX_ACCELERATION = 100
+local DEACCELERATION_DISTANCE = 25
 local MAX_SPEED = 50
 
 local DroneDriveControl = setmetatable({}, BaseObject)
@@ -30,8 +30,7 @@ function DroneDriveControl.new(obj)
 	self._maid:GiveTask(self.ReachedTarget)
 
 	self._maid:GiveTask(RunService.Heartbeat:Connect(function()
-		self:_updateSteerForce()
-		self:_detectTargetReached()
+		self:_applyBehaviors()
 	end))
 
 	return self
@@ -42,46 +41,60 @@ function DroneDriveControl:SetTargetAttachment(targetAttachment)
 	self._targetAttachment = targetAttachment
 end
 
-function DroneDriveControl:_updateSteerForce()
+function DroneDriveControl:_applyBehaviors()
+	local mass = self:_getMass()
 	local target = self:_getTargetPosition()
-	if not target then
-		self:_setSteerForce(Vector3.new())
-		return
-	end
-
 	local position = self:_getPosition()
 	local velocity = self:_getVelocity()
-	local maxForce = self:_getMaxForce()
-	local desired = target-position
-	local dist = desired.magnitude
-	print(velocity.magnitude)
 
-	if dist > DEACCELERATION_DISTANCE then
-		desired = desired.unit * MAX_SPEED
-	else
-		local speed = Math.map(dist, 0, DEACCELERATION_DISTANCE, 0, MAX_SPEED)
-		desired = desired.unit * speed
-	end
+	-- Calculate force
+	local steerForce = self:_getSteerAcceleration(position, velocity, target)*mass
+	local floatForce = self:_getFloatForce(mass)
 
-	local steer = desired - velocity
-	if steer.magnitude > maxForce then
-		steer = steer.unit*maxForce
-	end
-	self:_setSteerForce(steer)
+	self:_applyForce(steerForce + floatForce)
+
+	-- Detect state
+	self:_detectTargetReached(position, velocity, target)
 end
 
-function DroneDriveControl:_detectTargetReached()
-	local target = self:_getTargetPosition()
+function DroneDriveControl:_getSteerAcceleration(position, velocity, target)
+	if not target then
+		return Vector3.new()
+	end
+
+	local offset = target-position
+	local dist = offset.magnitude
+	local direction = offset.unit
+
+	local desiredVelocity
+	if dist > DEACCELERATION_DISTANCE then
+		desiredVelocity = direction * MAX_SPEED
+	else
+		local speed = Math.map(dist, 0, DEACCELERATION_DISTANCE, 0, MAX_SPEED)
+		desiredVelocity = direction * speed
+	end
+
+	local steer = desiredVelocity - velocity
+	if steer.magnitude > MAX_ACCELERATION then
+		steer = steer.unit*MAX_ACCELERATION
+	end
+	return steer
+end
+
+function DroneDriveControl:_getFloatForce(mass)
+	local floatForce = Vector3.new(0, Workspace.Gravity * mass, 0)
+	return floatForce
+end
+
+function DroneDriveControl:_detectTargetReached(position, velocity, target)
 	if not target then
 		return
 	end
 
-	local position = self:_getPosition()
 	if (target - position).magnitude > 5 then
 		return
 	end
 
-	local velocity = self:_getVelocity()
 	if velocity.magnitude > 5 then
 		return
 	end
@@ -89,12 +102,8 @@ function DroneDriveControl:_detectTargetReached()
 	self.ReachedTarget:Fire()
 end
 
-
-function DroneDriveControl:_setSteerForce(force)
-	local mass = self:_getMass()
-	local floatForce = Vector3.new(0, Workspace.Gravity * mass, 0)
-
-	self._vectorForce.Force = force + floatForce
+function DroneDriveControl:_applyForce(force)
+	self._vectorForce.Force = force
 end
 
 function DroneDriveControl:_getTargetPosition()
@@ -115,10 +124,6 @@ end
 
 function DroneDriveControl:_getVelocity()
 	return self._obj.Velocity
-end
-
-function DroneDriveControl:_getMaxForce()
-	return self:_getMass() * MAX_ACCELERATION
 end
 
 return DroneDriveControl
