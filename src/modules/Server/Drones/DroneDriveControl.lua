@@ -8,6 +8,7 @@ local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local Debris = game:GetService("Debris")
 
+local DroneTiltManager = require("DroneTiltManager")
 local BaseObject = require("BaseObject")
 local Signal = require("Signal")
 local Math = require("Math")
@@ -37,11 +38,18 @@ function DroneDriveControl.new(obj, drone, droneScanner)
 	self._vectorForce = self._obj.VectorForce
 	self._maid:GiveTask(self._vectorForce)
 
+	self._alignOrientation = self._obj.AlignOrientation
+	self._maid:GiveTask(self._alignOrientation)
+
+	self._tiltManager = DroneTiltManager.new(self._obj, self._vectorForce, self._alignOrientation)
+	self._maid:GiveTask(self._tiltManager)
+
 	self.ReachedTarget = Signal.new()
 	self._maid:GiveTask(self.ReachedTarget)
 
 	self._maid:GiveTask(RunService.Heartbeat:Connect(function()
 		self:_applyBehaviors()
+		self._tiltManager:Update()
 	end))
 
 	return self
