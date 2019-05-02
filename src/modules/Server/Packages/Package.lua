@@ -27,6 +27,10 @@ function Package:GetAttachment()
 	return self._obj.Attachment
 end
 
+function Package:SetParent(parent)
+	self._obj.Parent = parent
+end
+
 function Package:SetPosition(position)
 	-- Technically should be based off of attachment position but whatever
 	self._obj.Position = position

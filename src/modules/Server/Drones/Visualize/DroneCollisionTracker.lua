@@ -6,7 +6,6 @@ local require = require(game:GetService("ReplicatedStorage"):WaitForChild("Never
 
 local BaseObject = require("BaseObject")
 local Signal = require("Signal")
-
 local DroneCollisionTracker = setmetatable({}, BaseObject)
 DroneCollisionTracker.ClassName = "DroneCollisionTracker"
 DroneCollisionTracker.__index = DroneCollisionTracker
@@ -14,16 +13,13 @@ DroneCollisionTracker.__index = DroneCollisionTracker
 function DroneCollisionTracker.new(dronePart)
 	local self = setmetatable(BaseObject.new(), DroneCollisionTracker)
 
+	self._dronePart = dronePart or error("No dronePart")
+
 	self.Exploded = Signal.new()
 	self._maid:GiveTask(self.Exploded)
 
-	self._dronePart = dronePart or error("No dronePart")
-	self._maid:GiveTask(self._dronePart.Touched:Connect(function(part)
-		if part.CanCollide then
-			if self._dronePart.Velocity.magnitude > 10 then
-				self.Exploded:Fire()
-			end
-		end
+	self._maid:GiveTask(self._dronePart.Touched:Connect(function(...)
+		self:_handleTouch(...)
 	end))
 
 	self._maid:GiveTask(function()
@@ -31,6 +27,19 @@ function DroneCollisionTracker.new(dronePart)
 	end)
 
 	return self
+end
+
+function DroneCollisionTracker:_handleTouch(part)
+	if part:IsDescendantOf(self._dronePart) then
+		return
+	end
+
+	if not part.CanCollide then
+		return
+	end
+	if self._dronePart.Velocity.magnitude > 10 then
+		self.Exploded:Fire()
+	end
 end
 
 function DroneCollisionTracker:_visualizeExplosion()
