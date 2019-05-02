@@ -34,7 +34,7 @@ function DroneScanner.new(drone)
 
 		return not data.Part.CanCollide
 	end)
-	self._raycaster:Ignore({Workspace.CurrentCamera, self._drone:GetIgnorePart()})
+	self._raycaster:Ignore({Workspace.CurrentCamera, self._drone:GetPart()})
 
 	return self
 end

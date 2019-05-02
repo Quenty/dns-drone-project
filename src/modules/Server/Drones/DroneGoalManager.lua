@@ -11,10 +11,12 @@ local DroneGoalManager = setmetatable({}, BaseObject)
 DroneGoalManager.ClassName = "DroneGoalManager"
 DroneGoalManager.__index = DroneGoalManager
 
-function DroneGoalManager.new(driveControl)
+function DroneGoalManager.new(drone, driveControl)
 	local self = setmetatable(BaseObject.new(), DroneGoalManager)
 
+	self._drone = drone or error("No drone")
 	self._driveControl = driveControl or error("No driveControl")
+
 	self._alive = true
 	self._maid:GiveTask(function()
 		self._alive = false
@@ -31,7 +33,13 @@ function DroneGoalManager.new(driveControl)
 				warn("[DroneGoalManager] - No targets available")
 			end
 
+			if self._alive then
+				self._drone:SetBrickColor(BrickColor.new("Bright green"))
+			end
 			wait(1)
+			if self._alive then
+				self._drone:SetBrickColor(nil)
+			end
 		end
 	end)
 
