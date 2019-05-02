@@ -10,9 +10,9 @@ local Debris = game:GetService("Debris")
 local BaseObject = require("BaseObject")
 local Draw = require("Draw")
 local Raycaster = require("Raycaster")
+local ServerBinders = require("ServerBinders")
 
 local DEBUG_SCANS = false
-
 local SCAN_UP_FROM = 25
 local SCAN_COUNT = 75
 
@@ -20,17 +20,30 @@ local DroneScanner = setmetatable({}, BaseObject)
 DroneScanner.ClassName = "DroneScanner"
 DroneScanner.__index = DroneScanner
 
-function DroneScanner.new(obj)
+function DroneScanner.new(drone)
 	local self = setmetatable(BaseObject.new(), DroneScanner)
 
-	self._obj = obj or error("No drone part")
+	self._drone = drone or error("No drone part")
 
 	self._raycaster = Raycaster.new(function(data)
 		return not data.Part.CanCollide
 	end)
-	self._raycaster:Ignore({Workspace.CurrentCamera, self._obj})
+	self._raycaster:Ignore({Workspace.CurrentCamera, self._drone:GetIgnorePart()})
 
 	return self
+end
+
+function DroneScanner:GetDronePositions(position)
+
+	-- Use global knowledge for now
+	local positions = {}
+	for _, drone in pairs(ServerBinders.Drone:GetAll()) do
+		if drone ~= self._drone then
+			table.insert(positions, drone:GetPosition())
+		end
+	end
+
+	return positions
 end
 
 function DroneScanner:ScanInFront(position, velocity, height)
