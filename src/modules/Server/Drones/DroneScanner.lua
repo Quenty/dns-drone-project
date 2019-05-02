@@ -5,6 +5,7 @@
 local require = require(game:GetService("ReplicatedStorage"):WaitForChild("Nevermore"))
 
 local Workspace = game:GetService("Workspace")
+local CollectionService = game:GetService("CollectionService")
 local Debris = game:GetService("Debris")
 
 local BaseObject = require("BaseObject")
@@ -26,6 +27,11 @@ function DroneScanner.new(drone)
 	self._drone = drone or error("No drone part")
 
 	self._raycaster = Raycaster.new(function(data)
+		-- Ignore drones
+		if CollectionService:HasTag(data.Part, "Drone") then
+			return true
+		end
+
 		return not data.Part.CanCollide
 	end)
 	self._raycaster:Ignore({Workspace.CurrentCamera, self._drone:GetIgnorePart()})
