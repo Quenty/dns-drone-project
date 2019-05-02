@@ -114,7 +114,7 @@ function DroneDriveControl:_getHeightAcceleration(position, velocity, hits)
 	local target = position + Vector3.new(0, desiredHeight, 0)
 	local vertVel = velocity*Vector3.new(0, 1, 0)
 
-	Debris:AddItem(Draw.Point(target))
+	-- Debris:AddItem(Draw.Point(target))
 
 	return self:_getSteerAcceleration(position, vertVel, target, HEIGHT_MAX_SPEED, HEIGHT_MAX_ACCEL, HEIGHT_DEACCEL_DIST)
 		* Vector3.new(0, 1, 0)

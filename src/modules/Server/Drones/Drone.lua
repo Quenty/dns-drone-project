@@ -4,11 +4,10 @@
 
 local require = require(game:GetService("ReplicatedStorage"):WaitForChild("Nevermore"))
 
-local Workspace = game:GetService("Workspace")
-
 local DroneScanner = require("DroneScanner")
 local BaseObject = require("BaseObject")
 local DroneDriveControl = require("DroneDriveControl")
+local DroneGoalManager = require("DroneGoalManager")
 
 local Drone = setmetatable({}, BaseObject)
 Drone.ClassName = "Drone"
@@ -22,7 +21,8 @@ function Drone.new(obj)
 	self._driveControl = DroneDriveControl.new(self._obj, self._scanner)
 	self._maid:GiveTask(self._driveControl)
 
-	self._driveControl:SetTargetAttachment(Workspace.MainTarget.Attachment)
+	self._droneGoalManager = DroneGoalManager.new(self._driveControl)
+	self._maid:GiveTask(self._driveControl)
 
 	return self
 end
