@@ -23,7 +23,9 @@ local HEIGHT_MAX_SPEED = 50
 local HEIGHT_MAX_ACCEL = 100
 local HEIGHT_DEACCEL_DIST = 25
 
-local DESIRED_SEPERATION = 13
+local DESIRED_SEPERATION = 15
+local SEPER_MAX_SPEED = 50
+local SEPER_MAX_ACCEL = 100
 
 local DroneDriveControl = setmetatable({}, BaseObject)
 DroneDriveControl.ClassName = "DroneDriveControl"
@@ -74,7 +76,7 @@ function DroneDriveControl:_applyBehaviors()
 	local steerAccel = self:_getSteerAcceleration(position, velocity, target, MAX_SPEED, MAX_ACCEL, DEACCEL_DIST)
 	local floatAccel = self:_getFloatAcceleration()
 	local heightAccel = self:_getHeightAcceleration(position, velocity, frontHits)
-	local seperateAccel = self:_getSeperateAcceleration(position, velocity, nearbyDronePositions, MAX_SPEED, MAX_ACCEL)
+	local seperateAccel = self:_getSeperateAcceleration(position, velocity, nearbyDronePositions, SEPER_MAX_SPEED, SEPER_MAX_ACCEL)
 
 	self:_applyForce((steerAccel + floatAccel + heightAccel + seperateAccel)*mass)
 
