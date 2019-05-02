@@ -1,0 +1,73 @@
+{
+  "name": "dns-drone-project",
+  "tree": {
+    "$className": "DataModel",
+    "HttpService": {
+      "$className": "HttpService",
+      "$properties": {
+        "HttpEnabled": true
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Ambient": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "Outlines": false,
+        "GlobalShadows": true,
+        "Brightness": 2.0
+      }
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Nevermore": {
+        "$path": "C:/Users/James Onnen/Documents/Git/libraries/Nevermore/Loader/ReplicatedStorage/Nevermore"
+      },
+      "i18n": {
+        "$path": "src/i18n"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Nevermore": {
+        "$className": "Folder",
+        "Core": {
+          "$path": "C:/Users/James Onnen/Documents/Git/libraries/Nevermore/Modules"
+        },
+        "GameAnalytics": {
+          "$path": "C:/Users/James Onnen/Documents/Git/libraries/ga-quenty-roblox/modules"
+        },
+        "Modules": {
+          "$path": "src/modules"
+        }
+      },
+      "Script": {
+        "$path": "src/scripts/Server"
+      }
+    },
+    "SoundService": {
+      "$className": "SoundService",
+      "$properties": {
+        "RespectFilteringEnabled": true
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "FilteringEnabled": true
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Main": {
+          "$path": "src/scripts/Client"
+        }
+      }
+    }
+  }
+}
