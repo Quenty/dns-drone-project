@@ -32,9 +32,9 @@ function DroneTiltManager:Update()
 		return
 	end
 
-	-- local angleUp = math.acos(force.unit:Dot(Vector3.new(0, 1, 0)))
 
-	local top = force.unit
+	-- Adjust force to ignore a lot of gravity to get comical tilting
+	local top = (force * Vector3.new(1, 0.15, 1)).unit
 	local back = -self._obj.velocity.unit
 	local right = top:Cross(back)
 
