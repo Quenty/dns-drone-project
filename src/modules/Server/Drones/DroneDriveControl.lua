@@ -46,7 +46,7 @@ function DroneDriveControl.new(obj, droneScanner)
 end
 
 function DroneDriveControl:SetTargetAttachment(targetAttachment)
-	assert(typeof(targetAttachment) == "Instance")
+	assert((typeof(targetAttachment) == "Instance") or (targetAttachment == nil))
 	self._targetAttachment = targetAttachment
 end
 
