@@ -6,14 +6,21 @@ local require = require(game:GetService("ReplicatedStorage"):WaitForChild("Never
 
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
+local Debris = game:GetService("Debris")
 
 local BaseObject = require("BaseObject")
 local Signal = require("Signal")
 local Math = require("Math")
+local Draw = require("Draw")
 
-local MAX_ACCELERATION = 100
-local DEACCELERATION_DISTANCE = 25
 local MAX_SPEED = 25
+local MAX_ACCEL = 100
+local DEACCEL_DIST = 25
+
+local DESIRED_HEIGHT = 13
+local HEIGHT_MAX_SPEED = 50
+local HEIGHT_MAX_ACCEL = 100
+local HEIGHT_DEACCEL_DIST = 25
 
 local DroneDriveControl = setmetatable({}, BaseObject)
 DroneDriveControl.ClassName = "DroneDriveControl"
@@ -50,47 +57,71 @@ function DroneDriveControl:_applyBehaviors()
 	local velocity = self:_getVelocity()
 
 	-- Discover
-	local hits = self._droneScanner:ScanInFront(position, velocity)
+	local hits = self._droneScanner:ScanInFront(position, velocity, DESIRED_HEIGHT)
 
-	-- Calculate force
-	local steerForce = self:_getSteerAcceleration(position, velocity, target)*mass
-	local floatForce = self:_getFloatForce(mass)
+	-- Calculate acceleration
+	local steerAccel = self:_getSteerAcceleration(position, velocity, target, MAX_SPEED, MAX_ACCEL, DEACCEL_DIST)
+	local floatAccel = self:_getFloatAcceleration()
+	local heightAccel = self:_getHeightAcceleration(position, velocity, hits)
 
-	self:_applyForce(steerForce + floatForce)
+	self:_applyForce((steerAccel + floatAccel + heightAccel)*mass)
 
 	-- Detect state
 	self:_detectTargetReached(position, velocity, target)
 end
 
-function DroneDriveControl:_getSteerAcceleration(position, velocity, target)
-	if not target then
-		return Vector3.new()
-	end
-
-	local offset = target-position
-	local dist = offset.magnitude
-	local direction = offset.unit
+function DroneDriveControl:_getSteerAcceleration(position, velocity, target, maxSpeed, maxAccel, deaccelDist)
 
 	local desiredVelocity
-	if dist > DEACCELERATION_DISTANCE then
-		desiredVelocity = direction * MAX_SPEED
+	if target then
+		local offset = target-position
+		local dist = offset.magnitude
+		local direction = offset.unit
+
+		if dist > deaccelDist then
+			desiredVelocity = direction * maxSpeed
+		else
+			local speed = Math.map(dist, 0, deaccelDist, 0, maxSpeed)
+			desiredVelocity = direction * speed
+		end
 	else
-		local speed = Math.map(dist, 0, DEACCELERATION_DISTANCE, 0, MAX_SPEED)
-		desiredVelocity = direction * speed
+		desiredVelocity = Vector3.new()
 	end
 
 	local steer = desiredVelocity - velocity
-	if steer.magnitude > MAX_ACCELERATION then
-		steer = steer.unit*MAX_ACCELERATION
+	if steer.magnitude > maxAccel then
+		steer = steer.unit*maxAccel
 	end
 	return steer
 end
 
+function DroneDriveControl:_getHeightAcceleration(position, velocity, hits)
+	local highestHit = nil
+	for _, item in pairs(hits) do
+		if (not highestHit) or (item.Position.y > highestHit.y) then
+			highestHit = item.Position
+		end
+	end
 
+	local desiredHeight
+	if highestHit then
+		desiredHeight = highestHit.y + DESIRED_HEIGHT
+	else
+		-- Slowly drop
+		return Vector3.new(0, -5, 0)
+	end
 
-function DroneDriveControl:_getFloatForce(mass)
-	local floatForce = Vector3.new(0, Workspace.Gravity * mass, 0)
-	return floatForce
+	local target = position + Vector3.new(0, desiredHeight, 0)
+	local vertVel = velocity*Vector3.new(0, 1, 0)
+
+	Debris:AddItem(Draw.Point(target))
+
+	return self:_getSteerAcceleration(position, vertVel, target, HEIGHT_MAX_SPEED, HEIGHT_MAX_ACCEL, HEIGHT_DEACCEL_DIST)
+		* Vector3.new(0, 1, 0)
+end
+
+function DroneDriveControl:_getFloatAcceleration(mass)
+	return Vector3.new(0, Workspace.Gravity, 0)
 end
 
 function DroneDriveControl:_detectTargetReached(position, velocity, target)
