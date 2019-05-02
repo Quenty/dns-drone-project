@@ -22,6 +22,8 @@ local HEIGHT_MAX_SPEED = 50
 local HEIGHT_MAX_ACCEL = 100
 local HEIGHT_DEACCEL_DIST = 25
 
+local DESIRED_SEPERATION = 16
+
 local DroneDriveControl = setmetatable({}, BaseObject)
 DroneDriveControl.ClassName = "DroneDriveControl"
 DroneDriveControl.__index = DroneDriveControl
@@ -56,19 +58,22 @@ function DroneDriveControl:_applyBehaviors()
 	local velocity = self:_getVelocity()
 
 	-- Discover
-	local hits = self._droneScanner:ScanInFront(position, velocity, DESIRED_HEIGHT)
+	local frontHits = self._droneScanner:ScanInFront(position, velocity, DESIRED_HEIGHT)
+	local nearbyDronePositions = self._droneScanner:GetDronePositions(position)
 
-	-- Calculate acceleration
+	-- Calculate acceleration based upon different goals
 	local steerAccel = self:_getSteerAcceleration(position, velocity, target, MAX_SPEED, MAX_ACCEL, DEACCEL_DIST)
 	local floatAccel = self:_getFloatAcceleration()
-	local heightAccel = self:_getHeightAcceleration(position, velocity, hits)
+	local heightAccel = self:_getHeightAcceleration(position, velocity, frontHits)
+	local seperateAccel = self:_getSeperateAcceleration(position, velocity, nearbyDronePositions, MAX_SPEED, MAX_ACCEL)
 
-	self:_applyForce((steerAccel + floatAccel + heightAccel)*mass)
+	self:_applyForce((steerAccel + floatAccel + heightAccel + seperateAccel)*mass)
 
 	-- Detect state
 	self:_detectTargetReached(position, velocity, target)
 end
 
+--- Attempts to steer towards a target
 function DroneDriveControl:_getSteerAcceleration(position, velocity, target, maxSpeed, maxAccel, deaccelDist)
 	local desiredVelocity
 	if target then
@@ -93,6 +98,7 @@ function DroneDriveControl:_getSteerAcceleration(position, velocity, target, max
 	return steer
 end
 
+--- Attempts to keep drone from running into the ground, and going over obstacles
 function DroneDriveControl:_getHeightAcceleration(position, velocity, hits)
 	local highestHit = nil
 	for _, item in pairs(hits) do
@@ -116,6 +122,36 @@ function DroneDriveControl:_getHeightAcceleration(position, velocity, hits)
 
 	return self:_getSteerAcceleration(position, vertVel, target, HEIGHT_MAX_SPEED, HEIGHT_MAX_ACCEL, HEIGHT_DEACCEL_DIST)
 		* Vector3.new(0, 1, 0)
+end
+
+function DroneDriveControl:_getSeperateAcceleration(position, velocity, nearbyDronePositions, maxSpeed, maxAccel)
+	if #nearbyDronePositions == 0 then
+		return Vector3.new()
+	end
+
+	local count = 0
+	local sum = Vector3.new()
+	for _, pos in pairs(nearbyDronePositions) do
+		local offset = position - pos
+		local dist = offset.magnitude
+		if dist > 0 and dist <= DESIRED_SEPERATION then
+			sum = sum + offset/(dist*dist) -- inverse square law
+			count = count + 1
+		end
+	end
+
+	if count <= 0 then
+		return Vector3.new()
+	end
+
+	local desired = sum.unit * maxSpeed
+
+	local steer = desired - velocity
+	if steer.magnitude > maxAccel then
+		steer = steer.unit * maxAccel
+	end
+
+	return steer
 end
 
 function DroneDriveControl:_getFloatAcceleration(mass)
