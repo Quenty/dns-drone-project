@@ -163,7 +163,7 @@ function DroneDriveControl:_detectTargetReached(position, velocity, target)
 		return
 	end
 
-	if (target - position).magnitude > 5 then
+	if ((target - position) * Vector3.new(1, 0, 1)).magnitude > 5 then
 		return
 	end
 
