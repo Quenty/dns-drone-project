@@ -10,21 +10,23 @@ local RunService = game:GetService("RunService")
 local BaseObject = require("BaseObject")
 local Signal = require("Signal")
 local Math = require("Math")
-local Draw = require("Draw")
 
 local MAX_ACCELERATION = 100
 local DEACCELERATION_DISTANCE = 25
-local MAX_SPEED = 50
+local MAX_SPEED = 25
 
 local DroneDriveControl = setmetatable({}, BaseObject)
 DroneDriveControl.ClassName = "DroneDriveControl"
 DroneDriveControl.__index = DroneDriveControl
 
-function DroneDriveControl.new(obj)
+function DroneDriveControl.new(obj, droneScanner)
 	local self = setmetatable(BaseObject.new(obj), DroneDriveControl)
+
+	self._droneScanner = droneScanner or error("No droneScanner")
 
 	self._vectorForce = self._obj.VectorForce
 	self._target = nil
+
 
 	self.ReachedTarget = Signal.new()
 	self._maid:GiveTask(self.ReachedTarget)
@@ -46,6 +48,9 @@ function DroneDriveControl:_applyBehaviors()
 	local target = self:_getTargetPosition()
 	local position = self:_getPosition()
 	local velocity = self:_getVelocity()
+
+	-- Discover
+	local hits = self._droneScanner:ScanInFront(position, velocity)
 
 	-- Calculate force
 	local steerForce = self:_getSteerAcceleration(position, velocity, target)*mass
@@ -80,6 +85,8 @@ function DroneDriveControl:_getSteerAcceleration(position, velocity, target)
 	end
 	return steer
 end
+
+
 
 function DroneDriveControl:_getFloatForce(mass)
 	local floatForce = Vector3.new(0, Workspace.Gravity * mass, 0)
