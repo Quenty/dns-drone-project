@@ -19,6 +19,10 @@ function Package.new(obj)
 	return self
 end
 
+function Package:GetMass()
+	return self._obj:GetMass()
+end
+
 function Package:GetAttachment()
 	return self._obj.Attachment
 end

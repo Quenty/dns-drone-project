@@ -22,7 +22,7 @@ function Drone.new(obj)
 	self._originalColor = self._obj.BrickColor
 	self._scanner = DroneScanner.new(self)
 
-	self._driveControl = DroneDriveControl.new(self._obj, self._scanner)
+	self._driveControl = DroneDriveControl.new(self._obj, self, self._scanner)
 	self._maid:GiveTask(self._driveControl)
 
 	self._packageHolder = DronePackageHolder.new(self._obj)
@@ -42,6 +42,11 @@ function Drone.new(obj)
 	self._obj.Anchored = false
 
 	return self
+end
+
+function Drone:GetMass()
+	local mass = self._obj:GetMass()
+	return mass + self._packageHolder:GetMass()
 end
 
 function Drone:GetPackageHolder()

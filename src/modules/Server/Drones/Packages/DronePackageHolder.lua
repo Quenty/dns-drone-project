@@ -5,6 +5,8 @@
 local require = require(game:GetService("ReplicatedStorage"):WaitForChild("Nevermore"))
 
 local BaseObject = require("BaseObject")
+local BinderUtil = require("BinderUtil")
+local ServerBinders = require("ServerBinders")
 
 local DronePackageHolder = setmetatable({}, BaseObject)
 DronePackageHolder.ClassName = "DronePackageHolder"
@@ -16,6 +18,15 @@ function DronePackageHolder.new(obj)
 	self._ropeConstraint = self._obj.RopeConstraint
 
 	return self
+end
+
+function DronePackageHolder:GetMass()
+	local package = self:GetPackage()
+	if package then
+		return package:GetMass()
+	end
+
+	return 0
 end
 
 function DronePackageHolder:SetPackage(package)
@@ -34,7 +45,16 @@ function DronePackageHolder:DropPackage()
 end
 
 function DronePackageHolder:HasPackage()
-	return self._ropeConstraint.Attachment1
+	return self:GetPackage() ~= nil
+end
+
+function DronePackageHolder:GetPackage()
+	local part = self._ropeConstraint.Attachment1
+	if part then
+		return BinderUtil.findFirstAncestor(ServerBinders.Package, part)
+	end
+
+	return nil
 end
 
 return DronePackageHolder

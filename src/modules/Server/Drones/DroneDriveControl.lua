@@ -28,9 +28,10 @@ local DroneDriveControl = setmetatable({}, BaseObject)
 DroneDriveControl.ClassName = "DroneDriveControl"
 DroneDriveControl.__index = DroneDriveControl
 
-function DroneDriveControl.new(obj, droneScanner)
+function DroneDriveControl.new(obj, drone, droneScanner)
 	local self = setmetatable(BaseObject.new(obj), DroneDriveControl)
 
+	self._drone = drone or error("No drone")
 	self._droneScanner = droneScanner or error("No droneScanner")
 
 	self._vectorForce = self._obj.VectorForce
@@ -52,7 +53,7 @@ function DroneDriveControl:SetTargetAttachment(targetAttachment)
 end
 
 function DroneDriveControl:_applyBehaviors()
-	local mass = self:_getMass()
+	local mass = self._drone:GetMass()
 	local target = self:_getTargetPosition()
 	local position = self:_getPosition()
 	local velocity = self:_getVelocity()
@@ -184,10 +185,6 @@ function DroneDriveControl:_getTargetPosition()
 	end
 
 	return self._targetAttachment.WorldPosition
-end
-
-function DroneDriveControl:_getMass()
-	return self._obj:GetMass()
 end
 
 function DroneDriveControl:_getPosition()

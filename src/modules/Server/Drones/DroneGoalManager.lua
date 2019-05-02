@@ -28,6 +28,7 @@ function DroneGoalManager.new(drone, driveControl)
 			local target = self:_getNewTarget()
 			if target then
 				self:_driveToTarget(target)
+				target:HandleTargetReached(self._drone)
 			else
 				warn("[DroneGoalManager] - No targets available")
 			end
@@ -48,9 +49,6 @@ end
 function DroneGoalManager:_driveToTarget(target)
 	self._driveControl:SetTargetAttachment(target:GetAttachment())
 	self._driveControl.ReachedTarget:Wait()
-
-	target:HandleTargetReached(self._drone)
-
 	self._driveControl:SetTargetAttachment(nil)
 end
 
