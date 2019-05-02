@@ -26,9 +26,9 @@ function DroneCollisionTracker.new(dronePart)
 		end
 	end))
 
-	self._maid:GiveTask(self.Exploded:Connect(function()
+	self._maid:GiveTask(function()
 		self:_visualizeExplosion()
-	end))
+	end)
 
 	return self
 end
