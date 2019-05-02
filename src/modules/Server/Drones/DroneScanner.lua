@@ -33,6 +33,9 @@ function DroneScanner.new(drone)
 		if CollectionService:HasTag(data.Part, "Drone") then
 			return true
 		end
+		if CollectionService:HasTag(data.Part, "Package") then
+			return true
+		end
 
 		return not data.Part.CanCollide
 	end)
