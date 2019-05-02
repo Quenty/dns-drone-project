@@ -24,9 +24,11 @@ function Drone.new(obj)
 	self._maid:GiveTask(self._driveControl)
 
 	self._droneGoalManager = DroneGoalManager.new(self._driveControl)
-	self._maid:GiveTask(self._driveControl)
+	self._maid:GiveTask(self._droneGoalManager)
 
 	self._collisionTracker = DroneCollisionTracker.new(self._obj)
+	self._maid:GiveTask(self._collisionTracker)
+
 	self._collisionTracker.Exploded:Connect(function()
 		ServerBinders.Drone:Unbind(self._obj)
 	end)
