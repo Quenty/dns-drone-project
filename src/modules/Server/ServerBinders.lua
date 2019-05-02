@@ -10,4 +10,8 @@ local BinderProvider = require("BinderProvider")
 return BinderProvider.new(function(self)
 	-- Add drones
 	self:Add(Binder.new("Drone", require("Drone")))
+
+	-- Add targets
+	self:Add(Binder.new("PickUpTarget", require("PickUpTarget")))
+	self:Add(Binder.new("DeliveryTarget", require("DeliveryTarget")))
 end)
