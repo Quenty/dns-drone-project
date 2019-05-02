@@ -22,7 +22,7 @@ local HEIGHT_MAX_SPEED = 50
 local HEIGHT_MAX_ACCEL = 100
 local HEIGHT_DEACCEL_DIST = 25
 
-local DESIRED_SEPERATION = 16
+local DESIRED_SEPERATION = 9
 
 local DroneDriveControl = setmetatable({}, BaseObject)
 DroneDriveControl.ClassName = "DroneDriveControl"
