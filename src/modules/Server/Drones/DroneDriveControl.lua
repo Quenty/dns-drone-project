@@ -32,8 +32,7 @@ function DroneDriveControl.new(obj, droneScanner)
 	self._droneScanner = droneScanner or error("No droneScanner")
 
 	self._vectorForce = self._obj.VectorForce
-	self._target = nil
-
+	self._maid:GiveTask(self._vectorForce)
 
 	self.ReachedTarget = Signal.new()
 	self._maid:GiveTask(self.ReachedTarget)
@@ -71,7 +70,6 @@ function DroneDriveControl:_applyBehaviors()
 end
 
 function DroneDriveControl:_getSteerAcceleration(position, velocity, target, maxSpeed, maxAccel, deaccelDist)
-
 	local desiredVelocity
 	if target then
 		local offset = target-position
