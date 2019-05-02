@@ -15,6 +15,7 @@ function DroneGoalManager.new(drone, driveControl)
 	local self = setmetatable(BaseObject.new(), DroneGoalManager)
 
 	self._drone = drone or error("No drone")
+	self._packageHolder = self._drone:GetPackageHolder() or error("No packageHolder")
 	self._driveControl = driveControl or error("No driveControl")
 
 	self._alive = true
@@ -23,10 +24,8 @@ function DroneGoalManager.new(drone, driveControl)
 	end)
 
 	spawn(function()
-		local lastTarget = nil
 		while self._alive do
-			local target = self:_getNewTarget(lastTarget)
-			lastTarget = target
+			local target = self:_getNewTarget()
 			if target then
 				self:_driveToTarget(target)
 			else
@@ -49,14 +48,17 @@ end
 function DroneGoalManager:_driveToTarget(target)
 	self._driveControl:SetTargetAttachment(target:GetAttachment())
 	self._driveControl.ReachedTarget:Wait()
+
+	target:HandleTargetReached(self._drone)
+
 	self._driveControl:SetTargetAttachment(nil)
 end
 
-function DroneGoalManager:_getNewTarget(lastTarget)
+function DroneGoalManager:_getNewTarget()
 	local targets
 
 	-- Use global knowledge for now
-	if lastTarget and lastTarget:IsA("DeliveryTarget") then
+	if not self._packageHolder:HasPackage() then
 		targets = ServerBinders.PickUpTarget:GetAll()
 	else
 		targets = ServerBinders.DeliveryTarget:GetAll()

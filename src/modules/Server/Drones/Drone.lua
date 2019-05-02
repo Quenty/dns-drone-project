@@ -4,12 +4,13 @@
 
 local require = require(game:GetService("ReplicatedStorage"):WaitForChild("Nevermore"))
 
-local DroneScanner = require("DroneScanner")
 local BaseObject = require("BaseObject")
-local ServerBinders = require("ServerBinders")
+local DroneCollisionTracker = require("DroneCollisionTracker")
 local DroneDriveControl = require("DroneDriveControl")
 local DroneGoalManager = require("DroneGoalManager")
-local DroneCollisionTracker = require("DroneCollisionTracker")
+local DronePackageHolder = require("DronePackageHolder")
+local DroneScanner = require("DroneScanner")
+local ServerBinders = require("ServerBinders")
 
 local Drone = setmetatable({}, BaseObject)
 Drone.ClassName = "Drone"
@@ -24,6 +25,9 @@ function Drone.new(obj)
 	self._driveControl = DroneDriveControl.new(self._obj, self._scanner)
 	self._maid:GiveTask(self._driveControl)
 
+	self._packageHolder = DronePackageHolder.new(self._obj)
+	self._maid:GiveTask(self._packageHolder)
+
 	self._droneGoalManager = DroneGoalManager.new(self, self._driveControl)
 	self._maid:GiveTask(self._droneGoalManager)
 
@@ -35,7 +39,13 @@ function Drone.new(obj)
 		ServerBinders.Drone:Unbind(self._obj)
 	end)
 
+	self._obj.Anchored = false
+
 	return self
+end
+
+function Drone:GetPackageHolder()
+	return self._packageHolder
 end
 
 function Drone:GetPart()

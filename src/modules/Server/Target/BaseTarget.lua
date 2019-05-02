@@ -24,4 +24,8 @@ function BaseTarget:GetAttachment()
 	return self._attachment
 end
 
+function BaseTarget:HandleTargetReached(drone)
+	error("Not implemented")
+end
+
 return BaseTarget

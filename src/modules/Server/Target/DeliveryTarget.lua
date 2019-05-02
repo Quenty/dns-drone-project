@@ -16,4 +16,8 @@ function DeliveryTarget.new(obj)
 	return self
 end
 
+function DeliveryTarget:HandleTargetReached(drone)
+	drone:GetPackageHolder():DropPackage()
+end
+
 return DeliveryTarget
