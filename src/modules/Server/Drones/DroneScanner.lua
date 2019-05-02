@@ -14,8 +14,9 @@ local Raycaster = require("Raycaster")
 local ServerBinders = require("ServerBinders")
 
 local DEBUG_SCANS = false
-local SCAN_UP_FROM = 25
+local SCAN_UP_FROM = 50
 
+local SCAN_BEHIND = 2
 local MIN_SCAN_COUNT = 10
 local MAX_SCAN_COUNT = 75
 
@@ -71,7 +72,7 @@ function DroneScanner:ScanInFront(position, velocity, height)
 		local desiredScans = math.ceil(flatVelocity.magnitude*3)
 		local scanCount = math.clamp(desiredScans, MIN_SCAN_COUNT, MAX_SCAN_COUNT)
 
-		for i=0, scanCount, 1 do
+		for i=-SCAN_BEHIND, scanCount, 1 do
 			local pos = position + direction*i + Vector3.new(0, SCAN_UP_FROM, 0)
 			local ray = Ray.new(pos, Vector3.new(0, -scanLength, 0))
 			self:_doRayScan(hits, ray)
