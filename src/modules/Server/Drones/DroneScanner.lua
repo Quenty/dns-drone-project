@@ -15,7 +15,9 @@ local ServerBinders = require("ServerBinders")
 
 local DEBUG_SCANS = false
 local SCAN_UP_FROM = 25
-local SCAN_COUNT = 75
+
+local MIN_SCAN_COUNT = 10
+local MAX_SCAN_COUNT = 75
 
 local DroneScanner = setmetatable({}, BaseObject)
 DroneScanner.ClassName = "DroneScanner"
@@ -60,8 +62,13 @@ function DroneScanner:ScanInFront(position, velocity, height)
 		local ray = Ray.new(position, Vector3.new(0, -scanLength, 0))
 		self:_doRayScan(hits, ray)
 	else
-		local direction = (velocity * Vector3.new(1, 0, 1)).unit
-		for i=0, SCAN_COUNT, 1 do
+		local flatVelocity = (velocity * Vector3.new(1, 0, 1))
+		local direction = flatVelocity.unit
+
+		local desiredScans = math.ceil(flatVelocity.magnitude*3)
+		local scanCount = math.clamp(desiredScans, MIN_SCAN_COUNT, MAX_SCAN_COUNT)
+
+		for i=0, scanCount, 1 do
 			local pos = position + direction*i + Vector3.new(0, SCAN_UP_FROM, 0)
 			local ray = Ray.new(pos, Vector3.new(0, -scanLength, 0))
 			self:_doRayScan(hits, ray)
