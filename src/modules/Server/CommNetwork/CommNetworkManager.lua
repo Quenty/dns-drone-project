@@ -55,10 +55,29 @@ function CommNetworkManager:_handleComms(radio, radios)
 	end
 end
 
+function CommNetworkManager:_getJammingZones()
+	return ServerBinders.JammingZone:GetAll()
+end
+
 function CommNetworkManager:_getRadios()
+	local zones = self:_getJammingZones()
+
 	local radios = {}
 	for _, item in pairs(ServerBinders.Drone:GetAll()) do
-		table.insert(radios, item:GetRadio())
+		local jammed = false
+		local radio = item:GetRadio()
+		local radioPosition = radio:GetPosition()
+
+		for _, zone in pairs(zones) do
+			if zone:InZone(radioPosition) then
+				jammed = true
+				break
+			end
+		end
+
+		if not jammed then
+			table.insert(radios, radio)
+		end
 	end
 	return radios
 end

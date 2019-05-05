@@ -17,4 +17,7 @@ return BinderProvider.new(function(self)
 
 	-- Add packages
 	self:Add(Binder.new("Package", require("Package")))
+
+	-- Add comms
+	self:Add(Binder.new("JammingZone", require("JammingZone")))
 end)
