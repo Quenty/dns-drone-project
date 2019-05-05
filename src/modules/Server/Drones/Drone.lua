@@ -25,6 +25,8 @@ function Drone.new(obj)
 	self._guid = HttpService:GenerateGUID(false)
 	self._originalColor = self._obj.BrickColor
 
+	self._obj.Name = "Drone_" .. self._guid
+
 	self._droneRadio = DroneRadio.new(self._obj)
 	self._maid:GiveTask(self._droneRadio)
 

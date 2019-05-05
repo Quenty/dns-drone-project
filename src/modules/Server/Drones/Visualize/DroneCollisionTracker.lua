@@ -38,6 +38,7 @@ function DroneCollisionTracker:_handleTouch(part)
 		return
 	end
 	if (self._dronePart.Velocity - part.Velocity).magnitude > 10 then
+		print(self._dronePart.Name, "Died hitting", part:GetFullName(), (self._dronePart.Velocity - part.Velocity).magnitude)
 		self.Exploded:Fire()
 	end
 end

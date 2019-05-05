@@ -16,6 +16,6 @@ local commNetworkManager = require("CommNetworkManager").new()
 spawn(function()
 	while true do
 		commNetworkManager:SimulateNetwork()
-		wait(0.05)
+		wait(0.025)
 	end
 end)

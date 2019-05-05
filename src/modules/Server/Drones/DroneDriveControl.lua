@@ -6,26 +6,29 @@ local require = require(game:GetService("ReplicatedStorage"):WaitForChild("Never
 
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
-local Debris = game:GetService("Debris")
 
 local DroneTiltManager = require("DroneTiltManager")
 local BaseObject = require("BaseObject")
 local Signal = require("Signal")
 local Math = require("Math")
-local Draw = require("Draw")
 
 local MAX_SPEED = 25
 local MAX_ACCEL = 100
 local DEACCEL_DIST = 25
 
+-- Should generally keep the max height speed/acceleration higher than seperation seperation
+-- drones don't vector into the ground
 local DESIRED_HEIGHT = 16
 local HEIGHT_MAX_SPEED = 50
 local HEIGHT_MAX_ACCEL = 100
 local HEIGHT_DEACCEL_DIST = 25
 
-local DESIRED_SEPARATION = 15
-local SEPAR_MAX_SPEED = 50
+local DESIRED_SEPARATION = 16
+local SEPAR_MAX_SPEED = 40
 local SEPER_MAX_ACCEL = 100
+
+local MAX_DISTANCE_AT_TARGET = 9
+local MAX_VELOCITY_AT_TARGET = 3
 
 local DroneDriveControl = setmetatable({}, BaseObject)
 DroneDriveControl.ClassName = "DroneDriveControl"
@@ -123,7 +126,7 @@ function DroneDriveControl:_getHeightAcceleration(position, velocity, hits)
 		desiredHeight = highestHit.y + DESIRED_HEIGHT
 	else
 		-- Slowly drop
-		return Vector3.new(0, -5, 0)
+		return Vector3.new(0, -2.5, 0)
 	end
 
 	local target = position + Vector3.new(0, desiredHeight, 0)
@@ -174,11 +177,11 @@ function DroneDriveControl:_detectTargetReached(position, velocity, target)
 		return
 	end
 
-	if ((target - position) * Vector3.new(1, 0, 1)).magnitude > 9 then
+	if ((target - position) * Vector3.new(1, 0, 1)).magnitude > MAX_DISTANCE_AT_TARGET then
 		return
 	end
 
-	if velocity.magnitude > 5 then
+	if velocity.magnitude > MAX_VELOCITY_AT_TARGET then
 		return
 	end
 
