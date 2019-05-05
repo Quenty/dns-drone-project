@@ -23,8 +23,8 @@ local HEIGHT_MAX_SPEED = 50
 local HEIGHT_MAX_ACCEL = 100
 local HEIGHT_DEACCEL_DIST = 25
 
-local DESIRED_SEPERATION = 15
-local SEPER_MAX_SPEED = 50
+local DESIRED_SEPARATION = 15
+local SEPAR_MAX_SPEED = 50
 local SEPER_MAX_ACCEL = 100
 
 local DroneDriveControl = setmetatable({}, BaseObject)
@@ -70,15 +70,15 @@ function DroneDriveControl:_applyBehaviors()
 
 	-- Discover
 	local frontHits = self._droneScanner:ScanInFront(position, velocity, DESIRED_HEIGHT)
-	local nearbyDronePositions = self._droneScanner:GetDronePositions(position)
+	local nearbyDronePositions = self._droneScanner:GetDronePositions()
 
 	-- Calculate acceleration based upon different goals
 	local steerAccel = self:_getSteerAcceleration(position, velocity, target, MAX_SPEED, MAX_ACCEL, DEACCEL_DIST)
 	local floatAccel = self:_getFloatAcceleration()
 	local heightAccel = self:_getHeightAcceleration(position, velocity, frontHits)
-	local seperateAccel = self:_getSeperateAcceleration(position, velocity, nearbyDronePositions, SEPER_MAX_SPEED, SEPER_MAX_ACCEL)
+	local separateAccel = self:_getSeparateAcceleration(position, velocity, nearbyDronePositions, SEPAR_MAX_SPEED, SEPER_MAX_ACCEL)
 
-	self:_applyForce((steerAccel + floatAccel + heightAccel + seperateAccel)*mass)
+	self:_applyForce((steerAccel + floatAccel + heightAccel + separateAccel)*mass)
 
 	-- Detect state
 	self:_detectTargetReached(position, velocity, target)
@@ -135,7 +135,7 @@ function DroneDriveControl:_getHeightAcceleration(position, velocity, hits)
 		* Vector3.new(0, 1, 0)
 end
 
-function DroneDriveControl:_getSeperateAcceleration(position, velocity, nearbyDronePositions, maxSpeed, maxAccel)
+function DroneDriveControl:_getSeparateAcceleration(position, velocity, nearbyDronePositions, maxSpeed, maxAccel)
 	if #nearbyDronePositions == 0 then
 		return Vector3.new()
 	end
@@ -145,7 +145,7 @@ function DroneDriveControl:_getSeperateAcceleration(position, velocity, nearbyDr
 	for _, pos in pairs(nearbyDronePositions) do
 		local offset = position - pos
 		local dist = offset.magnitude
-		if dist > 0 and dist <= DESIRED_SEPERATION then
+		if dist > 0 and dist <= DESIRED_SEPARATION then
 			sum = sum + offset/(dist*dist) -- inverse square law
 			count = count + 1
 		end

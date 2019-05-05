@@ -4,8 +4,11 @@
 
 local require = require(game:GetService("ReplicatedStorage"):WaitForChild("Nevermore"))
 
+local HttpService = game:GetService("HttpService")
+
 local BaseObject = require("BaseObject")
 local DroneCollisionTracker = require("DroneCollisionTracker")
+local DroneRadio = require("DroneRadio")
 local DroneDriveControl = require("DroneDriveControl")
 local DroneGoalManager = require("DroneGoalManager")
 local DronePackageHolder = require("DronePackageHolder")
@@ -19,8 +22,14 @@ Drone.__index = Drone
 function Drone.new(obj)
 	local self = setmetatable(BaseObject.new(obj), Drone)
 
+	self._guid = HttpService:GenerateGUID(false)
 	self._originalColor = self._obj.BrickColor
+
+	self._droneRadio = DroneRadio.new(self._obj)
+	self._maid:GiveTask(self._droneRadio)
+
 	self._scanner = DroneScanner.new(self)
+	self._maid:GiveTask(self._scanner)
 
 	self._driveControl = DroneDriveControl.new(self._obj, self, self._scanner)
 	self._maid:GiveTask(self._driveControl)
@@ -42,6 +51,14 @@ function Drone.new(obj)
 	self._obj.Anchored = false
 
 	return self
+end
+
+function Drone:GetGUID()
+	return self._guid
+end
+
+function Drone:GetRadio()
+	return self._droneRadio
 end
 
 function Drone:GetMass()
@@ -67,6 +84,10 @@ end
 
 function Drone:GetPosition()
 	return self._obj.Position
+end
+
+function Drone:GetVelocity()
+	return self._obj.Velocity
 end
 
 return Drone

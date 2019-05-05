@@ -11,7 +11,7 @@ local Debris = game:GetService("Debris")
 local BaseObject = require("BaseObject")
 local Draw = require("Draw")
 local Raycaster = require("Raycaster")
-local ServerBinders = require("ServerBinders")
+local Table = require("Table")
 
 local DEBUG_SCANS = false
 local SCAN_UP_FROM = 50
@@ -19,6 +19,11 @@ local SCAN_UP_FROM = 50
 local SCAN_BEHIND = 2
 local MIN_SCAN_COUNT = 10
 local MAX_SCAN_COUNT = 75
+
+-- Comms
+local MAX_PACKET_AGE_SECONDS = 1
+local MAX_FORWARD_TIME = 0.5
+local MAX_FORWARD_COUNT = 3
 
 local DroneScanner = setmetatable({}, BaseObject)
 DroneScanner.ClassName = "DroneScanner"
@@ -28,6 +33,13 @@ function DroneScanner.new(drone)
 	local self = setmetatable(BaseObject.new(), DroneScanner)
 
 	self._drone = drone or error("No drone part")
+	self._radio = self._drone:GetRadio()
+
+	self._knownDroneData = {} -- [guid] = packet
+
+	self._maid:GiveTask(self._radio.DataRecieved:Connect(function(...)
+		self:_handleDataRecieved(...)
+	end))
 
 	self._raycaster = Raycaster.new(function(data)
 		-- Ignore drones
@@ -42,16 +54,29 @@ function DroneScanner.new(drone)
 	end)
 	self._raycaster:Ignore({Workspace.CurrentCamera, self._drone:GetPart()})
 
+	self._alive = true
+	self._maid:GiveTask(function()
+		self._alive = false
+	end)
+	spawn(function()
+		while self._alive do
+			self:_broadcastLocation()
+
+			-- Avoid flooding network
+			wait(0.05 + math.random() * 0.1)
+		end
+	end)
+
 	return self
 end
 
-function DroneScanner:GetDronePositions(position)
-
-	-- Use global knowledge for now
+function DroneScanner:GetDronePositions()
 	local positions = {}
-	for _, drone in pairs(ServerBinders.Drone:GetAll()) do
-		if drone ~= self._drone then
-			table.insert(positions, drone:GetPosition())
+	for _, packet in pairs(self._knownDroneData) do
+		if (tick() - packet.TimeStamp) <= MAX_PACKET_AGE_SECONDS then
+			local delta = tick() - packet.TimeStamp
+			local position = packet.Position + delta*packet.Velocity
+			table.insert(positions, position)
 		end
 	end
 
@@ -82,14 +107,51 @@ function DroneScanner:ScanInFront(position, velocity, height)
 	return hits
 end
 
+function DroneScanner:_handleDataRecieved(packet)
+	assert(packet)
+
+	if packet.Type == "LocationPacket" then
+		if packet.DroneGUID ~= self._drone:GetGUID() then
+			self._knownDroneData[packet.DroneGUID] = packet
+
+			-- Forward!
+			if (tick() - packet.TimeStamp) <= MAX_FORWARD_TIME
+				and packet.ForwardCount < MAX_FORWARD_COUNT then
+
+				local newPacket = Table.Copy(packet)
+				newPacket.ForwardCount = newPacket.ForwardCount + 1
+				self._radio:BroadcastData(newPacket)
+			end
+		end
+	end
+end
+
+function DroneScanner:_broadcastLocation()
+	local packet = {
+		Type = "LocationPacket";
+		DroneGUID = self._drone:GetGUID();
+		Position = self._drone:GetPosition();
+		Velocity = self._drone:GetVelocity();
+		ForwardCount = 0;
+		TimeStamp = tick();
+	}
+
+	self._radio:BroadcastData(packet)
+end
+
 function DroneScanner:_doRayScan(hits, ray)
 	local hitData = self._raycaster:FindPartOnRay(ray)
-	if hitData then
-		if DEBUG_SCANS then
-			Debris:AddItem(Draw.Ray(ray), 0.05)
-		end
 
+	if DEBUG_SCANS then
+		Debris:AddItem(Draw.Ray(ray), 0.05)
+	end
+
+	if hitData then
 		table.insert(hits, hitData)
+
+		if DEBUG_SCANS then
+			Debris:AddItem(Draw.Point(hitData.Position), 0.05)
+		end
 	end
 end
 

@@ -37,7 +37,7 @@ function DroneCollisionTracker:_handleTouch(part)
 	if not part.CanCollide then
 		return
 	end
-	if self._dronePart.Velocity.magnitude > 10 then
+	if (self._dronePart.Velocity - part.Velocity).magnitude > 10 then
 		self.Exploded:Fire()
 	end
 end
