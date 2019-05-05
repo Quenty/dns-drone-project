@@ -7,6 +7,7 @@ local require = require(game:GetService("ReplicatedStorage"):WaitForChild("Never
 local Workspace = game:GetService("Workspace")
 local CollectionService = game:GetService("CollectionService")
 local Debris = game:GetService("Debris")
+local HttpService = game:GetService("HttpService")
 
 local BaseObject = require("BaseObject")
 local Draw = require("Draw")
@@ -112,11 +113,13 @@ function DroneScanner:_handleDataRecieved(packet)
 
 	if packet.Type == "LocationPacket" then
 		if packet.DroneGUID ~= self._drone:GetGUID() then
+			local currentPacket = self._knownDroneData[packet.DroneGUID]
 			self._knownDroneData[packet.DroneGUID] = packet
 
 			-- Forward!
 			if (tick() - packet.TimeStamp) <= MAX_FORWARD_TIME
-				and packet.ForwardCount < MAX_FORWARD_COUNT then
+				and packet.ForwardCount < MAX_FORWARD_COUNT
+				and (currentPacket and currentPacket.PacketGUID ~= packet.PacketGUID) then
 
 				local newPacket = Table.Copy(packet)
 				newPacket.ForwardCount = newPacket.ForwardCount + 1
@@ -129,6 +132,7 @@ end
 function DroneScanner:_broadcastLocation()
 	local packet = {
 		Type = "LocationPacket";
+		PacketGUID = HttpService:GenerateGUID(false);
 		DroneGUID = self._drone:GetGUID();
 		Position = self._drone:GetPosition();
 		Velocity = self._drone:GetVelocity();
