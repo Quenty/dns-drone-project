@@ -23,7 +23,7 @@ function DroneRadio.new(obj)
 end
 
 function DroneRadio:GetSendRange()
-	return 40
+	return 50
 end
 
 function DroneRadio:GetPosition()
