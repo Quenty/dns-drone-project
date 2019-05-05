@@ -22,8 +22,8 @@ local MIN_SCAN_COUNT = 10
 local MAX_SCAN_COUNT = 75
 
 -- Comms
-local MAX_PACKET_AGE_SECONDS = 1
-local MAX_FORWARD_TIME = 0.5
+local MAX_PACKET_AGE_SECONDS = 0.7
+local MAX_FORWARD_TIME = 0.35
 local MAX_FORWARD_COUNT = 3
 
 local DroneScanner = setmetatable({}, BaseObject)
@@ -112,19 +112,35 @@ function DroneScanner:_handleDataRecieved(packet)
 	assert(packet)
 
 	if packet.Type == "LocationPacket" then
-		if packet.DroneGUID ~= self._drone:GetGUID() then
-			local currentPacket = self._knownDroneData[packet.DroneGUID]
-			self._knownDroneData[packet.DroneGUID] = packet
+		if packet.DroneGUID == self._drone:GetGUID() then
+			return
+		end
 
-			-- Forward!
-			if (tick() - packet.TimeStamp) <= MAX_FORWARD_TIME
-				and packet.ForwardCount < MAX_FORWARD_COUNT
-				and (currentPacket and currentPacket.PacketGUID ~= packet.PacketGUID) then
+		-- Ignore forwarded old packets
+		local currentPacket = self._knownDroneData[packet.DroneGUID]
+		if currentPacket and currentPacket.TimeStamp >= packet.TimeStamp then
+			return
+		end
 
-				local newPacket = Table.Copy(packet)
-				newPacket.ForwardCount = newPacket.ForwardCount + 1
-				self._radio:BroadcastData(newPacket)
-			end
+		-- Ignore packet if we have the same packet already
+		if currentPacket and currentPacket.PacketGUID == packet.PacketGUID then
+			return
+		end
+
+		-- Ignore old packets
+		if (tick() - packet.TimeStamp) >= MAX_PACKET_AGE_SECONDS then
+			return
+		end
+
+		self._knownDroneData[packet.DroneGUID] = packet
+
+		-- Forward!
+		if (tick() - packet.TimeStamp) <= MAX_FORWARD_TIME
+			and packet.ForwardCount < MAX_FORWARD_COUNT then
+
+			local newPacket = Table.Copy(packet)
+			newPacket.ForwardCount = newPacket.ForwardCount + 1
+			self._radio:BroadcastData(newPacket)
 		end
 	end
 end
