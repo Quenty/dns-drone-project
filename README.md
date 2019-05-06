@@ -2,6 +2,10 @@
 
 This project simulates drones in an adhoc network in Roblox. This project is written in Lua.
 
+## Video
+
+[https://www.youtube.com/watch?v=oCeEDcrgiHs](https://www.youtube.com/watch?v=oCeEDcrgiHs&t=7s)
+
 ## Running the project
 
 1. Install Roblox Studio
